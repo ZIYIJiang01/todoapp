@@ -8,7 +8,7 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 #connect our flask app to particular database
 #this would not create database for you, so create database manually 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:lqq011201@127.0.0.1:5432/todoapp'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@127.0.0.1:5432/todoapp'
 #link SQLAlchemy to flask app
 db = SQLAlchemy(app)
 
