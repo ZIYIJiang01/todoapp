@@ -1,0 +1,193 @@
+<html>
+    <head>
+        <title>Todo App</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 300px;
+        }
+        li {
+            clear: both;
+        }
+        li button {
+            border: none;
+            outline: none;
+            color: red;
+            float: right;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .lists-wrapper, .todos-wrapper {
+            display: inline-block;
+            vertical-align: top;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="lists-wrapper">
+            <!-- create list-->
+            <form id="list-form">
+                <input type="text" id="listname" name="listname"/>
+                <input type="submit" value="Create"/>
+            </form>
+
+            <!--list all out lists-->
+            <ul id="lists">
+                {% for list in lists %}
+                <!-- url, checkbos, delete button -->
+                <li>
+                    <a href="/lists/{{ list.id }}">
+                    {{ list.name }}
+                </a>
+                </li>
+                {% endfor %}
+            </ul>    
+        </div>
+        
+
+       <div id="error" class="hidden">Something went wrong!</div> 
+
+       <div class="todos-wrapper">
+        <h4>{{ active_list.name }}</h4>
+        <form id="form">
+            <!-- no longer need this if using fetch to asych sending request <form id="form" method="post" action="/todos/create"> -->
+            <input type="text" id="description" name="description" />
+            <input type="submit" value="Create" />
+        </form>
+        
+        <ul id="todos">
+                {% for todo in todos %}
+                <!-- add checkbox-->
+                <li>
+                    <input class="check-lists" data-id='{{ todo.id }}' type="checkbox" 
+                    {% if todo.completed %} checked {% endif %} />
+                    {{todo.description }}
+                    <button class="deleted-lists" data-id="{{ todo.id }}" >&cross;</button>
+                </li>
+                {% endfor %}
+        </ul>  
+       </div>
+       
+       <!-- implement and handling the submit type -->
+    
+       <script>
+            //list create//
+            document.getElementById('list-form').onsubmit = function(e) {
+                e.preventDefault();
+                fetch('/lists/create', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        'name': document.getElementById('listname').value
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                //make the response(a string) a json response
+                .then(function(response) {
+                    return response.json();
+                })
+                //manipulate the json response //
+                .then(function(jsonResponse) {
+                    console.log(jsonResponse);//whatever json response//
+                    //after create an object, we want to append it to our list//
+                    //define the element//
+                    const lisItem = document.createElement('Lis');
+                    //specify the innerhtml, which is description from json response//
+                    lisItem.innerHTML = jsonResponse['name'];
+                    document.getElementById('lists').appendChild(lisItem);
+                    document.getElementById('error').className = 'hidden';
+                })
+                //if something goes wrong, then remove the class, otherwise add the hidden class as above//
+                .catch(function() {
+                    document.getElementById('error').className = '';
+                })
+            }
+            //list check//
+            
+            //list delete//
+
+
+
+
+            //delete//
+            const deleteitems = document.querySelectorAll('.deleted');
+            for (let i = 0; i < deleteitems.length; i++) {
+                const deleteitem = deleteitems[i];
+                deleteitem.onclick = function(e) {
+                    const todoId = e.target.dataset['id'];
+                    fetch('/todos/' + todoId, {
+                        method:'DELETE'
+                    })
+                    .then(function(){
+                        const item = e.target.parentElement;
+                        item.remove();
+                    })
+                }
+            }
+            //listen to the check box//
+            const checkboxes = document.querySelectorAll('.check-completed');
+            for (let i = 0; i < checkboxes.length; i++) {
+                const checkbox = checkboxes[i];
+                checkbox.onchange = function(e){
+                    console.log('event',e);
+                    const newCompleted = e.target.checked;
+                    const todoId = e.target.dataset['id'];
+                    fetch('/todos/' + todoId + '/set-completed', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            'completed': newCompleted
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(function() {
+                    document.getElementById('error').className = 'hidden';
+                    })
+                    .catch(function() {
+                    document.getElementById('error').className = '';
+                    })
+                }
+
+            }
+            //create//
+            document.getElementById('form').onsubmit = function(e) {
+                e.preventDefault();
+                fetch('/todos/create', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        'description': document.getElementById('description').value
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                //make the response(a string) a json response
+                .then(function(response) {
+                    return response.json();
+                })
+                //manipulate the json response //
+                .then(function(jsonResponse) {
+                    console.log(jsonResponse);//whatever json response//
+                    //after create an object, we want to append it to our list//
+                    //define the element//
+                    const liItem = document.createElement('LI');
+                    //specify the innerhtml, which is description from json response//
+                    liItem.innerHTML = jsonResponse['description'];
+                    document.getElementById('todos').appendChild(liItem);
+                    document.getElementById('error').className = 'hidden';
+                })
+                //if something goes wrong, then remove the class, otherwise add the hidden class as above//
+                .catch(function() {
+                    document.getElementById('error').className = '';
+                })
+            }
+       </script>
+    </body>
+</html>
